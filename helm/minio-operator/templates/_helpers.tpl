@@ -1,75 +1,37 @@
+{{/* vim: set filetype=mustache: */}}
 {{/*
-Copyright Broadcom, Inc. All Rights Reserved.
-SPDX-License-Identifier: APACHE-2.0
+Expand the name of the chart.
 */}}
-
-{{/*
-Return the proper Docker Image Registry Secret Names
-*/}}
-{{- define "minio-operator.imagePullSecrets" -}}
-{{- include "common.images.pullSecrets" (dict "images" (list .Values.image .Values.minioImage) "global" .Values.global) -}}
+{{- define "minio-operator.name" -}}
+  {{- default .Chart.Name | trunc 63 | trimSuffix "-" -}}
 {{- end -}}
 
+
 {{/*
-Return the proper MinIO(R) Operator image name
+Create chart name and version as used by the chart label.
 */}}
-{{- define "minio-operator.operator.image" -}}
-{{ include "common.images.image" (dict "imageRoot" .Values.image "global" .Values.global) }}
+{{- define "minio-operator.chart" -}}
+  {{- printf "%s-%s" .Chart.Name .Chart.Version | replace "+" "_" | trunc 63 | trimSuffix "-" -}}
 {{- end -}}
 
 {{/*
-Return the proper MinIO(R) image name
+Common labels for operator
 */}}
-{{- define "minio-operator.minio.image" -}}
-{{ include "common.images.image" (dict "imageRoot" .Values.minioImage "global" .Values.global) }}
+{{- define "minio-operator.labels" -}}
+helm.sh/chart: {{ include "minio-operator.chart" . }}
+{{- if .Chart.AppVersion }}
+app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
+{{- end }}
+app.kubernetes.io/managed-by: {{ .Release.Service }}
+{{- range $key, $val :=  .Values.operator.additionalLabels }}
+{{ $key }}: {{ $val | quote }}
+{{- end }}
 {{- end -}}
 
 {{/*
-Return the proper MinIO(R) Operator Sidecar image name
+Selector labels Operator
 */}}
-{{- define "minio-operator.sidecar.image" -}}
-{{ include "common.images.image" (dict "imageRoot" .Values.sidecarImage "global" .Values.global) }}
+{{- define "minio-operator.selectorLabels" -}}
+app.kubernetes.io/name: {{ include "minio-operator.name" . }}
+app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end -}}
-
-{{/*
-Return the proper KES(R) image name
-*/}}
-{{- define "minio-operator.kes.image" -}}
-{{ include "common.images.image" (dict "imageRoot" .Values.kesImage "global" .Values.global) }}
-{{- end -}}
-
-{{/*
-Create the name of the service account to use
-*/}}
-{{- define "minio-operator.serviceAccountName" -}}
-{{- if .Values.serviceAccount.create -}}
-    {{ default (include "common.names.fullname" .) .Values.serviceAccount.name }}
-{{- else -}}
-    {{ default "default" .Values.serviceAccount.name }}
-{{- end -}}
-{{- end -}}
-
-{{/*
-Validate values for MinIO(R) Operator
-*/}}
-{{- define "minio-operator.validateValues" -}}
-{{- $messages := list -}}
-{{- $messages := append $messages (include "minio-operator.validateValues.extraVolumes" .) -}}
-{{- $messages := without $messages "" -}}
-{{- $message := join "\n" $messages -}}
-{{- if $message -}}
-{{-   printf "\nVALUES VALIDATION:\n%s" $message -}}
-{{- end -}}
-{{- end -}}
-
-{{/*
-Validate values of MinIO(R) Operator - Incorrect extra volume settings
-*/}}
-{{- define "minio-operator.validateValues.extraVolumes" -}}
-{{- if and .Values.extraVolumes (not .Values.extraVolumeMounts) -}}
-minio-operator: missing-extra-volume-mounts
-    You specified extra volumes but not mount points for them. Please set
-    the extraVolumeMounts value
-{{- end -}}
-{{- end -}}
-

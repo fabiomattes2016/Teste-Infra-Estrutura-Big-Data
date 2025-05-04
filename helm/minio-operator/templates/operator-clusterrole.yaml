@@ -1,19 +1,8 @@
-{{- /*
-Copyright Broadcom, Inc. All Rights Reserved.
-SPDX-License-Identifier: APACHE-2.0
-*/}}
-
-{{- if .Values.rbac.create }}
+apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
-apiVersion: {{ include "common.capabilities.rbac.apiVersion" . }}
 metadata:
-  name: {{ include "common.names.fullname.namespace" . }}
-  labels: {{- include "common.labels.standard" ( dict "customLabels" .Values.commonLabels "context" $ ) | nindent 4 }}
-    app.kubernetes.io/part-of: minio-operator
-    app.kubernetes.io/component: operator
-  {{- if .Values.commonAnnotations }}
-  annotations: {{- include "common.tplvalues.render" ( dict "value" .Values.commonAnnotations "context" $ ) | nindent 4 }}
-  {{- end }}
+  name: minio-operator-role
+  labels: {{- include "minio-operator.labels" . | nindent 4 }}
 rules:
   - apiGroups:
       - "apiextensions.k8s.io"
@@ -192,7 +181,3 @@ rules:
       - patch
       - update
       - deletecollection
-  {{- if .Values.rbac.rules }}
-  {{- include "common.tplvalues.render" ( dict "value" .Values.rbac.rules "context" $ ) | nindent 2 }}
-  {{- end }}
-{{- end }}
