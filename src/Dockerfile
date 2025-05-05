@@ -14,7 +14,7 @@ WORKDIR /app
 # Habilitando o Virtualenv
 COPY utils/requirements.txt .
 
-RUN python -m venv venv && . venv/bin/activate && pip install -r requirements.txt
+RUN python -m venv venv && . venv/bin/activate && pip install -r requirements.txt && pip install jupyterlab
 
 # Copia dos arquivos e pastas para o workdir
 COPY data/ .
